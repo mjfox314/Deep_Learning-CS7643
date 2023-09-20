@@ -1,0 +1,3 @@
+*.csv
+part1-convnet/data/*.csv
+part2-pytorch/data/*.csv
