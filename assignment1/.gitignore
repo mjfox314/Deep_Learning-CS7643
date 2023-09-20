@@ -1,0 +1,5 @@
+*.csv
+*.png
+data/*.csv
+data/mnist_test.csv
+data/mnist_train.csv
