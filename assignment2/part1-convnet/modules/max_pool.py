@@ -46,7 +46,26 @@ class MaxPooling:
         # Hint:                                                                     #
         #       1) You may implement the process with loops                         #
         #############################################################################
+        kernels, channels, height, width = x.shape
 
+        H_out = int((height - self.kernel_size)/self.stride) + 1
+        W_out = int((width - self.kernel_size)/self.stride) + 1
+
+        out = np.zeros((kernels, channels, H_out, W_out))
+
+        for kernel in range(kernels):
+
+            for channel in range(channels):
+
+                for h in range(H_out):
+                    height_start = h * self.stride
+                    height_end = height_start + self.kernel_size
+
+                    for w in range(W_out):
+                        width_start = w * self.stride
+                        width_end = width_start + self.kernel_size
+
+                        out[kernel, channel, h, w] = np.max(x[kernel, channel, height_start:height_end, width_start:width_end])
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -66,7 +85,28 @@ class MaxPooling:
         #       1) You may implement the process with loops                     #
         #       2) You may find np.unravel_index useful                             #
         #############################################################################
+        kernels, channels, height, width = dout.shape
+        dx = np.zeros(x.shape)
 
+        for kernel in range(kernels):
+
+            for channel in range(channels):
+
+                for h in range(height):
+                    height_start = h * self.stride
+                    height_end = height_start + self.kernel_size
+
+                    for w in range(width):
+                        width_start = w * self.stride
+                        width_end = width_start + self.kernel_size
+
+                        max_pool = x[kernel, channel, height_start:height_end, width_start:width_end]
+                        mask = (max_pool == np.max(max_pool))
+
+                        dx[kernel, channel, height_start:height_end, width_start:width_end] = mask * dout[kernel, channel, h, w]
+        
+
+        self.dx = dx
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

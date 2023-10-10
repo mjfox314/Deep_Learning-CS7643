@@ -53,11 +53,12 @@ class Linear:
         :return: The output computed by Wx+b. Save necessary variables in cache for backward
         """
         out = None
+        
         #############################################################################
         # TODO: Implement the forward pass.                                         #
         #    HINT: You may want to flatten the input first                          #
         #############################################################################
-
+        out = np.dot(x.reshape([x.shape[0], -1]), self.weight) + self.bias
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -74,7 +75,11 @@ class Linear:
         #############################################################################
         # TODO: Implement the linear backward pass.                                 #
         #############################################################################
-
+        p0 = np.dot(dout, self.weight.T)
+        self.dx = p0.reshape(x.shape)
+        p1 = x.reshape([x.shape[0], -1]).T
+        self.dw = np.dot(p1, dout)
+        self.db = np.sum(dout, axis=0)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

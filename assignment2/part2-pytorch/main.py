@@ -39,7 +39,7 @@ from models import TwoLayerNet, VanillaCNN, MyModel, resnet32
 from losses import FocalLoss, reweight
 
 parser = argparse.ArgumentParser(description='CS7643 Assignment-2 Part 2')
-parser.add_argument('--config', default='./config.yaml')
+parser.add_argument('--config', default='./config_mymodel.yaml')
 
 
 class AverageMeter(object):
@@ -93,6 +93,15 @@ def train(epoch, data_loader, model, optimizer, criterion):
         #       3. Compute gradients and update model parameters                    #
         #############################################################################
 
+        optimizer.zero_grad()
+
+        out = model(data)
+
+        loss = criterion(out, target)
+        loss.backward()
+        optimizer.step()
+        
+
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -134,7 +143,10 @@ def validate(epoch, val_loader, model, criterion):
         # TODO: Complete the body of training loop                                  #
         #       HINT: torch.no_grad()                                               #
         #############################################################################
+        out = model(data)
 
+        with torch.no_grad():
+            loss = criterion(out, target)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

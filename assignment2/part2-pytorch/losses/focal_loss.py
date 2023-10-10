@@ -33,11 +33,14 @@ def reweight(cls_num_list, beta=0.9999):
     :param beta: hyper-parameter for reweighting, see paper for more details
     :return:
     """
-    per_cls_weights = None
+    
     #############################################################################
     # TODO: reweight each class by effective numbers                            #
     #############################################################################
-
+    effective_number = 1.0 - np.power(beta, cls_num_list)
+    per_cls_weights = (1 - beta) / np.array(effective_number)
+    per_cls_weights = per_cls_weights / np.sum(per_cls_weights) * len(cls_num_list)
+    per_cls_weights = torch.tensor(per_cls_weights)
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -63,6 +66,14 @@ class FocalLoss(nn.Module):
         # TODO: Implement forward pass of the focal loss                            #
         #############################################################################
 
+        y_encode = F.one_hot(target)
+        softmax = nn.Softmax(1)
+        x = softmax(input)
+
+        loss = torch.sum(-y_encode * (1-x)**self.gamma * torch.log(x) * self.weight)
+        loss = loss / np.shape(input)[1]
+
+        
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

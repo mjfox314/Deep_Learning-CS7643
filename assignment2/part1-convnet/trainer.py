@@ -114,8 +114,10 @@ class ClassifierTrainer(object):
 
                 # print progress if needed
                 if verbose:
-                    print('Finished epoch %d / %d: cost %f, train: %f, lr %e'
-                          % (epoch, num_epochs, cost, train_acc, optimizer.learning_rate))
+                    print('Finished epoch %d / %d: train: %f, lr %e'
+                          % (epoch, num_epochs, train_acc, optimizer.learning_rate))
+                    # print('Finished epoch %d / %d: cost %f, train: %f, lr %e'
+                    #       % (epoch, num_epochs, cost, train_acc, optimizer.learning_rate))
 
         # return the training history statistics
         return loss_history, train_acc_history

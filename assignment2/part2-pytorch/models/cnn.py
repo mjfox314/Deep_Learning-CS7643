@@ -32,7 +32,11 @@ class VanillaCNN(nn.Module):
         #       Conv: 7x7 kernel, stride 1 and padding 0                            #
         #       Max Pooling: 2x2 kernel, stride 2                                   #
         #############################################################################
-
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(7,7), stride=1, padding=0)
+        self.act1 = nn.ReLU()
+        self.pool = nn.MaxPool2d(kernel_size=(2,2), stride=2)
+        self.flat = nn.Flatten()
+        self.fc1 = nn.Linear(5408, 10)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -42,7 +46,11 @@ class VanillaCNN(nn.Module):
         #############################################################################
         # TODO: Implement forward pass of the network                               #
         #############################################################################
-
+        y = self.conv1(x)
+        y = self.act1(y)
+        y = self.pool(y)
+        y = self.flat(y)
+        outs = self.fc1(y)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

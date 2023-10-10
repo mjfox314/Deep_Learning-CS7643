@@ -21,12 +21,15 @@ prohibited and subject to being investigated as a GT honor code violation.
 """
 
 from ._base_optimizer import _BaseOptimizer
+from collections import defaultdict
+import numpy as np
 
 
 class SGD(_BaseOptimizer):
     def __init__(self, model, learning_rate=1e-4, reg=1e-3, momentum=0.9):
         super().__init__(model, learning_rate, reg)
         self.momentum = momentum
+        self.velocities = defaultdict(dict)
 
     def update(self, model):
         """
@@ -42,7 +45,14 @@ class SGD(_BaseOptimizer):
                 # TODO:                                                                     #
                 #    1) Momentum updates for weights                                        #
                 #############################################################################
-                pass
+                if 'weight' not in self.velocities[m].keys():
+                    self.velocities[m]['weight'] = np.zeros(m.weight.shape)
+
+                self.velocities[m]['weight'] = self.momentum * self.velocities[m]['weight'] - self.learning_rate * m.dw
+                m.dw = self.velocities[m]['weight']
+                m.weight += m.dw
+
+
                 #############################################################################
                 #                              END OF YOUR CODE                             #
                 #############################################################################
@@ -51,7 +61,12 @@ class SGD(_BaseOptimizer):
                 # TODO:                                                                     #
                 #    1) Momentum updates for bias                                           #
                 #############################################################################
-                pass
+                if 'bias' not in self.velocities[m].keys():
+                    self.velocities[m]['bias'] = np.zeros(m.bias.shape)
+
+                self.velocities[m]['bias'] = self.momentum * self.velocities[m]['bias'] - self.learning_rate * m.db
+                m.db = self.velocities[m]['bias']
+                m.bias += m.db
                 #############################################################################
                 #                              END OF YOUR CODE                             #
                 #############################################################################
