@@ -1,0 +1,13 @@
+name: cs7643-a3
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - pyyaml=5.4.1
+  - matplotlib
+  - scipy
+  - future
+  - pip
+
+
+
