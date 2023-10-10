@@ -39,7 +39,15 @@ class SaliencyMap:
         # vectorization, and this is the one you should implement.                   #
         ##############################################################################
         # Note: Only a single back-propagation pass is required
-        pass
+        
+        y_pred = model(X_var)
+
+        loss = y_pred.gather(1, y_var.view(-1,1)).squeeze()
+        total_loss = loss.sum()
+        total_loss.backward()
+        absolute_grads = X_var.grad.data.abs()
+
+        saliency, indicies = torch.max(absolute_grads, 1)
 
         ##############################################################################
         #                             END OF YOUR CODE                               #
