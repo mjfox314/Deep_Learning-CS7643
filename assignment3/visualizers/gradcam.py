@@ -37,7 +37,12 @@ class CustomReLU(TorchFunc):
         # output:
         #   return downstream gradient
         ##############################################################################
-        grad=None
+
+        x = self.saved_tensors[0]
+        grad = dout
+        grad[grad < 0] = 0
+        grad[x < 0] = 0 
+        
         return grad
         ##############################################################################
         #                             END OF YOUR CODE                               #
@@ -77,7 +82,12 @@ class GradCam:
         #                                                                            #
         # Also note that the output of this function is a numpy.                     #
         ##############################################################################
-        pass
+        score = gc_model(X_tensor)
+        loss = torch.sum(score.gather(1, y_tensor.view(-1,1)).squeeze())
+        loss.backward()
+        guided_backprop = X_tensor.grad.data.permute(0,2,3,1).numpy()
+
+        return guided_backprop
         ##############################################################################
         #                             END OF YOUR CODE                               #
         ##############################################################################
@@ -118,7 +128,12 @@ class GradCam:
         # a variable 'cam'. Instructor code would then take care of rescaling it     #
         # back                                                                       #
         ##############################################################################
-        pass
+        
+        score = gc_model(X_tensor)
+        loss = torch.sum(score.gather(1, y_tensor.view(-1,1)).squeeze())
+        loss.backward()
+        gradients = torch.mean(self.gradient_value.data, (2,3), keepdim=True)
+        cam = torch.sum(self.activation_value.data * gradients, 1).numpy()
         ##############################################################################
         #                             END OF YOUR CODE                               #
         ##############################################################################
