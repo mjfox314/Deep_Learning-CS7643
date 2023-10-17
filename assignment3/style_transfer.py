@@ -150,7 +150,26 @@ params3 = {
     'dtype': dtype
 }
 
+params4 = {
+    'name': 'starry_scream',
+    'content_image' : 'styles_images/the_scream.jpg',
+    'style_image' : 'styles_images/starry_night.jpg',
+    'image_size' : 192,
+    'style_size' : 192,
+    'content_layer' : 3,
+    'content_weight' : 6e-2,
+    'style_layers' : [1, 4, 6, 7],
+    'style_weights' : [300000, 1000, 15, 3],
+    'tv_weight' : 2e-2,
+    'content_loss': content_loss,
+    'style_loss': style_loss,
+    'tv_loss': tv_loss,
+    'cnn': cnn,
+    'dtype': dtype
+}
+
 
 style_transfer(**params1)
 style_transfer(**params2)
 style_transfer(**params3)
+style_transfer(**params4)
