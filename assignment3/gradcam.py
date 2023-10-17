@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from PIL import Image
 from captum.attr import GuidedGradCam, GuidedBackprop
-from captum.attr import LayerActivation, LayerConductance, LayerGradCam
+from captum.attr import LayerActivation, LayerConductance, LayerGradCam, LayerAttribution
 
 from data_utils import *
 from image_utils import *
@@ -137,6 +137,7 @@ layer = model.features[3]
 layer_act = LayerActivation(model, layer)
 layer_act_attr = compute_attributions(layer_act, X_tensor)
 layer_act_attr_sum = layer_act_attr.mean(axis=1, keepdim=True)
+layer_act_attr_sum_inter = LayerAttribution.interpolate(layer_act_attr_sum, (224, 224)).squeeze()
 
 
 ##############################################################################
@@ -155,10 +156,12 @@ layer_act_attr_sum = layer_act_attr.mean(axis=1, keepdim=True)
 layer_con = LayerConductance(model, layer)
 layer_con_attr = compute_attributions(layer_con, X_tensor, target=y_tensor)
 layer_con_attr_sum = layer_con_attr.mean(axis=1, keepdim=True)
+layer_con_attr_sum_inter = LayerAttribution.interpolate(layer_con_attr_sum, (224, 224)).squeeze()
 
 layer_gc = LayerGradCam(model, layer)
 layer_gc_attr = compute_attributions(layer_gc, X_tensor, target=y_tensor)
 layer_gc_attr_sum = layer_gc_attr.mean(axis=1, keepdim=True)
+layer_gc_attr_sum.inter = LayerAttribution.interpolate(layer_gc_attr_sum, (224, 224)).squeeze()
 
 visualize_attr_maps([layer_act_attr_sum, layer_con_attr_sum, layer_gc_attr_sum], 
                     ["Layer Ativation", "Layer Conductance", "Layer GradCam"],
