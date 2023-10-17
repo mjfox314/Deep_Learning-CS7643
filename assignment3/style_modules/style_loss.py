@@ -79,7 +79,7 @@ class StyleLoss(nn.Module):
         for index in range(len(style_layers)):
             gram = self.gram_matrix(feats[style_layers[index]])
             difference = gram - style_targets[index]
-            style_loss.add(style_weights[index] * torch.sum(torch.pow(difference, 2)))
+            style_loss += style_weights[index] * torch.sum(torch.pow(difference, 2))
         
 
         return style_loss
