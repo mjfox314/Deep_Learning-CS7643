@@ -165,8 +165,8 @@ def style_transfer(name, content_image, style_image, image_size, style_size, con
         total_loss.backward()
 
         if t == decay_lr_at:
-            for parm in optimizer.param_groups:
-                parm['lr'] = decayed_lr
+            for pram in optimizer.param_groups:
+                pram['lr'] = decayed_lr
         
 
         optimizer.step()
@@ -176,15 +176,15 @@ def style_transfer(name, content_image, style_image, image_size, style_size, con
         #                             END OF YOUR CODE                               #
         ##############################################################################
     if not testing:
-        # if t % 100 == 0:
-        #     print('Iteration {}'.format(t))
-        #     plt.axis('off')
-        #     plt.imshow(deprocess(img.cpu()))
-        #     plt.show()
+        if t % 100 == 0:
+            print('Iteration {}'.format(t))
+            plt.axis('off')
+            plt.imshow(deprocess(img.cpu()))
+            plt.show()
         plt.axis('off')
         plt.imshow(deprocess(img.cpu()))
         plt.savefig('styles_images/' + name + '.png', bbox_inches = 'tight')
-        # plt.show()
+        plt.show()
 # Do not edit or delete below this line - used for testing the script
     if testing:
         return img
