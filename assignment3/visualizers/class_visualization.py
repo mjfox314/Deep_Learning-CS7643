@@ -86,7 +86,19 @@ class ClassVisualization:
             # sequential arithmetic operations involving small numbers             #
             ########################################################################
 
+            model_output = model(img_var)
+            score = [0, target_y]
 
+            if img_var.grad is not None:
+                img_var.grad.data.zero_()
+            
+            loss = score - l2_reg * torch.sum(torch.pow(img_var, 2))
+
+            score.backward()
+
+            grad = img_var.grad.data
+            img_var.data += learning_rate * (grad / torch.norm(grad))
+            probability, pred_label = torch.max(model_output, 1)
 
             ########################################################################
             #                             END OF YOUR CODE                         #
