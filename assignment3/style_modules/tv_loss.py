@@ -23,7 +23,7 @@ class TotalVariationLoss(nn.Module):
         # be computed.                                                               #
         ##############################################################################
 
-        # loss = Variable(torch.tensor(0.0))
+        loss = Variable(torch.tensor(0.0))
         # difference_h = img[:,:,-1,:] - img[:,:,1:,:]
         # difference_v = img[:,:,:,:-1] - img[:,:,:,1:]
         # loss = tv_weight * (torch.sum(difference_h**2) + torch.sum(difference_v**2))
@@ -34,7 +34,7 @@ class TotalVariationLoss(nn.Module):
         difference_h = torch.sum(torch.pow((img[:,:,:,:-1] - img[:,:,:,1:]), 2))
         difference_v = torch.sum(torch.pow((img[:,:,:1,:] - img[:,:,1:,:]), 2))
 
-        loss = tv_weight * (difference_h + difference_v)
+        loss += tv_weight * (difference_h + difference_v)
 
         return loss
 
