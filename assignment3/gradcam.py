@@ -117,9 +117,13 @@ conv_module = model.features[12]
 #       Use conv_module as the convolution layer for gradcam                 #
 ##############################################################################
 # Computing Guided GradCam
-
+guided_gradcam_grad = GuidedGradCam(gc_model, conv_module)
+attribution_grad = compute_attributions(guided_gradcam_grad, X_tensor, target=y_tensor)
 
 # Computing Guided BackProp
+guided_backprop_grad = GuidedBackprop(gc_model)
+attribution_guided_grad = compute_attributions(guided_backprop_grad, X_tensor, target=y_tensor)
+visualize_attr_maps([attribution_grad, attribution_guided_grad], ["Guided GradCam", "Guided BackProp"])
 
 ##############################################################################
 #                             END OF YOUR CODE                               #
@@ -130,9 +134,9 @@ conv_module = model.features[12]
 layer = model.features[3]
 
 # Example visualization for using layer visualizations 
-# layer_act = LayerActivation(model, layer)
-# layer_act_attr = compute_attributions(layer_act, X_tensor)
-# layer_act_attr_sum = layer_act_attr.mean(axis=1, keepdim=True)
+layer_act = LayerActivation(model, layer)
+layer_act_attr = compute_attributions(layer_act, X_tensor)
+layer_act_attr_sum = layer_act_attr.mean(axis=1, keepdim=True)
 
 
 ##############################################################################
@@ -148,7 +152,17 @@ layer = model.features[3]
 # Captum docs)                                                               #
 ##############################################################################
 
+layer_con = LayerConductance(model, layer)
+layer_con_attr = compute_attributions(layer_con, X_tensor, target=y_tensor)
+layer_con_attr_sum = layer_con_attr.mean(axis=1, keepdim=True)
 
+layer_gc = LayerGradCam(model, layer)
+layer_gc_attr = compute_attributions(layer_gc, X_tensor, target=y_tensor)
+layer_gc_attr_sum = layer_gc_attr.mean(axis=1, keepdim=True)
+
+visualize_attr_maps([layer_act_attr_sum, layer_con_attr_sum, layer_gc_attr_sum], 
+                    ["Layer Ativation", "Layer Conductance", "Layer GradCam"],
+                    attr_preprocess=lambda attr: attr.detach().numpy())
 ##############################################################################
 #                             END OF YOUR CODE                               #
 ##############################################################################

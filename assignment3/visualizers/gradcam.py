@@ -39,11 +39,10 @@ class CustomReLU(TorchFunc):
         ##############################################################################
 
         x = self.saved_tensors[0]
-        grad = dout
-        grad[grad < 0] = 0
-        grad[x < 0] = 0 
+        dout[dout < 0] = 0
+        dout[x < 0] = 0 
         
-        return grad
+        return dout
         ##############################################################################
         #                             END OF YOUR CODE                               #
         ##############################################################################
@@ -133,7 +132,8 @@ class GradCam:
         loss = torch.sum(score.gather(1, y_tensor.view(-1,1)).squeeze())
         loss.backward()
         gradients = torch.mean(self.gradient_value.data, (2,3), keepdim=True)
-        cam = torch.sum(self.activation_value.data * gradients, 1).numpy()
+        cam = torch.sum(self.activation_value.data * gradients, 1)
+        cam = cam.numpy()
         ##############################################################################
         #                             END OF YOUR CODE                               #
         ##############################################################################
