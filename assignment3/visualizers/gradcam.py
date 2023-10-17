@@ -108,8 +108,8 @@ class GradCam:
         def activation_hook(a, b, activation):
             self.activation_value = activation
 
-        conv_module.register_full_forward_hook(activation_hook)
-        conv_module.register_full_backward_hook(gradient_hook)
+        conv_module.register_forward_hook(activation_hook)
+        conv_module.register_backward_hook(gradient_hook)
         ##############################################################################
         # TODO: Implement GradCam as described in paper.                             #
         #                                                                            #
