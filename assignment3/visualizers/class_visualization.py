@@ -90,10 +90,11 @@ class ClassVisualization:
 
             score[0, target_y].backward()
 
-            img_var.grad = img_var.grad - 2 * l2_reg * img_var
-            gradient = learning_rate * img_var.grad / torch.norm(img_var.grad)
+            # img_var.grad = img_var.grad - 2 * l2_reg * img_var
+            # gradient = learning_rate * img_var.grad / torch.norm(img_var.grad) 
+            img_var_grad = img_var + learning_rate * img_var.grad / torch.norm(img_var.grad) - 2 * l2_reg * img_var
 
-            img_var.data.add_(gradient)
+            img_var.data.add_(img_var_grad)
             img_var.data.fill_(0)
 
             ########################################################################
