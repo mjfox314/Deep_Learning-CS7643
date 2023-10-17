@@ -72,7 +72,9 @@ class StyleLoss(nn.Module):
         # You will need to use your gram_matrix function.                            #
         ##############################################################################
 
-        style_loss = Variable(torch.tensor(0.0))
+        # style_loss = Variable(torch.tensor(0.0))
+
+        style_loss = 0
 
         for index in range(len(style_layers)):
             gram = self.gram_matrix(feats[style_layers[index]])
