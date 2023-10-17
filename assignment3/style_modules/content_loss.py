@@ -23,7 +23,10 @@ class ContentLoss(nn.Module):
         # be computed.                                                               #
         ##############################################################################
 
-        pass
+        difference = content_current - content_original
+        content_loss = content_weight * torch.sum(torch.pow(difference, 2))
+
+        return content_loss
         ##############################################################################
         #                             END OF YOUR CODE                               #
         ##############################################################################

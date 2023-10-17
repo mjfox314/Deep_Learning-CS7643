@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 
 class StyleLoss(nn.Module):
     def gram_matrix(self, features, normalize=True):
@@ -26,7 +27,15 @@ class StyleLoss(nn.Module):
         # product in a batch.                                                        #
         ##############################################################################
 
-        pass
+        N, C, H, W = features.shape
+        feature_map = features.view(N, C, -1)
+        gram = torch.bmm(feature_map, torch.transpose(feature_map, 1, 2))
+
+        if normalize:
+            gram = gram / (C*H*W)
+
+        
+        return gram
         ##############################################################################
         #                             END OF YOUR CODE                               #
         ##############################################################################
@@ -63,7 +72,15 @@ class StyleLoss(nn.Module):
         # You will need to use your gram_matrix function.                            #
         ##############################################################################
 
-        pass
+        style_loss = Variable(torch.tensor(0.0))
+
+        for index in range(len(style_layers)):
+            gram = self.gram_matrix(feats[style_layers[index]])
+            difference = gram - style_targets[index]
+            style_loss.add(style_weights[index] * torch.sum(torch.pow(difference, 2)))
+        
+
+        return style_loss
 
         ##############################################################################
         #                             END OF YOUR CODE                               #

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 
 class TotalVariationLoss(nn.Module):
     def forward(self, img, tv_weight):
@@ -22,7 +23,14 @@ class TotalVariationLoss(nn.Module):
         # be computed.                                                               #
         ##############################################################################
 
-        pass
+        loss = Variable(torch.tensor(0.0))
+        difference_h = img[:,:,0:-1,:] - img[:,:,1:,:]
+        difference_v = img[:,:,:,0:-1] - img[:,:,:,1:]
+        loss.add(torch.sum(torch.pow(difference_h, 2)))
+        loss.add(torch.sum(torch.pow(difference_v, 2)))
+        loss *= tv_weight
+
+        return loss
 
         ##############################################################################
         #                             END OF YOUR CODE                               #

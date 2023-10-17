@@ -156,6 +156,20 @@ def style_transfer(name, content_image, style_image, image_size, style_size, con
         #   You would need to reduce the learning rate for the last few epochs.      #
         ##############################################################################
 
+        optimizer.zero_grad()
+        c_loss = content_loss(content_weight, feats[content_layer], content_target)
+        s_loss = style_loss(feats, style_layers, style_targets, style_weights)
+        t_loss = tv_loss(img_var, tv_weight)
+
+        total_loss = c_loss + s_loss + t_loss
+        total_loss.backward()
+
+        if t == decay_lr_at:
+            for parm in optimizer.param_groups:
+                parm['lr'] = decayed_lr
+        
+
+        optimizer.step()
         
 
         ##############################################################################
