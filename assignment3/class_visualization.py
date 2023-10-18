@@ -23,7 +23,7 @@ cv = ClassVisualization()
 # target_y = 78 # Tick
 # target_y = 187 # Yorkshire Terrier
 # target_y = 683 # Oboe
-# target_y = 366 # Gorilla
+target_y = 366 # Gorilla
 # target_y = 604 # Hourglass
 
 _, _, class_names = load_imagenet_val(num=5)
