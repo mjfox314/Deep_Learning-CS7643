@@ -1,7 +1,0 @@
-torchtext
-torch
-spacy
-tqdm
-numpy
-jupyter
-notebook
