@@ -58,12 +58,32 @@ class LSTM(nn.Module):
         ################################################################################
 
         # i_t: input gate
+        self.W_i = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.U_i = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_ii = nn.Parameter(torch.Tensor(hidden_size))
+        self.b_hi = nn.Parameter(torch.Tensor(hidden_size))
 
         # f_t: the forget gate
+        self.W_f = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.U_f = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_if = nn.Parameter(torch.Tensor(hidden_size))
+        self.b_hf = nn.Parameter(torch.Tensor(hidden_size))
 
         # g_t: the cell gate
+        self.W_g = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.U_g = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_ig = nn.Parameter(torch.Tensor(hidden_size))
+        self.b_hg = nn.Parameter(torch.Tensor(hidden_size))
 
         # o_t: the output gate
+        self.W_o = nn.Parameter(torch.Tensor(input_size, hidden_size))
+        self.U_o = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.b_io = nn.Parameter(torch.Tensor(hidden_size))
+        self.b_ho = nn.Parameter(torch.Tensor(hidden_size))
+
+        # activation functions
+        self.sigmoid = nn.Sigmoid()
+        self.tanh = nn.Tanh()
 
         ################################################################################
         #                              END OF YOUR CODE                                #
@@ -88,7 +108,21 @@ class LSTM(nn.Module):
         #   h_t and c_t should be initialized to zeros.                                #
         #   Note that this time you are also iterating over all of the time steps.     #
         ################################################################################
-        h_t, c_t = None, None  #remove this line when you start implementing your code
+
+        batch_size, sequence_size, feature_size = x.size()
+        h_t = torch.zeros(batch_size, self.hidden_size)
+        c_t = torch.zeros(batch_size, self.hidden_size)
+        
+
+        for t in range(sequence_size):
+            x_t = x[:, t, :]
+
+            i_t = self.sigmoid(x_t @ self.W_i + self.b_ii + h_t @ self.U_i + self.b_hi)
+            f_t = self.sigmoid(x_t @ self.W_f + self.b_if + h_t @ self.U_f + self.b_hf)
+            g_t = self.tanh(x_t @ self.W_g + self.b_ig + h_t @ self.U_g + self.b_hg)
+            o_t = self.sigmoid(x_t @ self.W_o + self.b_io + h_t @ self.U_o + self.b_ho)
+            c_t = f_t * c_t + i_t * g_t
+            h_t = o_t * self.tanh(c_t)
         ################################################################################
         #                              END OF YOUR CODE                                #
         ################################################################################

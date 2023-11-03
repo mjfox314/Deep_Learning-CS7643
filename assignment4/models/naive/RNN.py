@@ -56,8 +56,14 @@ class VanillaRNN(nn.Module):
         #############################################################################
 
         # initialize block that creates hidden
+        self.input_hidden = nn.Linear(input_size + hidden_size, hidden_size)
 
         # initialize block that creates output
+        self.input_output = nn.Linear(input_size + hidden_size, output_size)
+
+        # initialize probability distribution and activation function
+        self.softmax = nn.LogSoftmax()
+        self.activation = nn.Tanh()
 
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -81,7 +87,10 @@ class VanillaRNN(nn.Module):
         #   going over one time step. Please refer to the structure in the notebook.#                                              #
         #############################################################################
 
-        output, hidden = None, None  #remove this line when you start implementing your code
+        concatenate = torch.cat((input, hidden), 1)
+        hidden = self.activation(self.input_hidden(concatenate))
+        output = self.softmax(self.input_output(concatenate))
+        
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
