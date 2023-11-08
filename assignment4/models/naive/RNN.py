@@ -87,7 +87,7 @@ class VanillaRNN(nn.Module):
         #   going over one time step. Please refer to the structure in the notebook.#                                              #
         #############################################################################
 
-        concatenate = torch.cat((input, hidden), 1)
+        concatenate = torch.cat((input, hidden), dim=1)
         hidden = self.activation(self.input_hidden(concatenate))
         output = self.softmax(self.input_output(concatenate))
         

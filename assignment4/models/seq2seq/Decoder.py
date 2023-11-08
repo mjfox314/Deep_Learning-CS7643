@@ -54,6 +54,21 @@ class Decoder(nn.Module):
         # NOTE: Use nn.RNN and nn.LSTM instead of the naive implementation          #
         #############################################################################
 
+        # 1) embedding layer 
+        self.embedding = nn.Embedding(self.encoder_hidden_size, self.emb_size)
+
+        # 2) recurrent layer 
+        if model_type=="RNN":
+            self.recurrent_layer = nn.RNN(self.emb_size, self.decoder_hidden_size, batch_first=True)
+        
+        if model_type=="LSTM":
+            self.recurrent_layer = nn.LSTM(self.emb_size, self.decoder_hidden_size, batch_first=True)
+
+        # 3) single linear layer with (log)softmax layer for output
+        self.linear_layer = nn.LogSoftmax(nn.Linear(self.decoder_hidden_size, self.output_size))
+
+        # 4) dropout layer
+        self.dropout = nn.Dropout(dropout)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -82,7 +97,21 @@ class Decoder(nn.Module):
         # some other similar function for your implementation.                      #
         #############################################################################
 
-        attention = None   #remove this line when you start implementing your code
+        q = hidden
+        K = encoder_outputs
+
+        q = torch.transpose(q, 0, 1)
+        K = torch.transpose(K, 1, 2)
+
+
+        # attention = torch.bmm(q, K)
+        # norm = torch.linalg.matrix_norm(q, dim=(-2,-1)) * torch.linalg.matrix_norm(K, dim=(-2,-1)) 
+        # attention /= norm
+
+        attention = 
+
+        print(attention)
+
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

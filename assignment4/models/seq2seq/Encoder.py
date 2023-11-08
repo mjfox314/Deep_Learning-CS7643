@@ -57,7 +57,24 @@ class Encoder(nn.Module):
         #                                                                           #
         # NOTE: Use nn.RNN and nn.LSTM instead of the naive implementation          #
         #############################################################################
+        
+        # 1) embedding layer
+        self.embedding = nn.Embedding(self.input_size, self.emb_size)
 
+        # 2) recurrent layer 
+        if self.model_type=="RNN":
+            self.recurrent_layer = nn.RNN(self.emb_size, self.encoder_hidden_size, batch_first=True)
+        
+        if self.model_type=="LSTM":
+            self.recurrent_layer = nn.LSTM(self.emb_size, self.encoder_hidden_size, batch_first=True)
+        
+        # 3) linear layers with ReLU activation in between 
+        self.linear0 = nn.Linear(self.encoder_hidden_size, self.encoder_hidden_size)
+        self.activation = nn.ReLU()
+        self.linear1 = nn.Linear(self.encoder_hidden_size, self.decoder_hidden_size)
+
+        # 4) dropout layer
+        self.dropout_layer = nn.Dropout(dropout)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -79,7 +96,16 @@ class Encoder(nn.Module):
         #       Apply tanh activation to the hidden tensor before returning it      #
         #############################################################################
 
-        output, hidden = None, None     #remove this line when you start implementing your code
+        embedding = self.dropout_layer(self.embedding(input))
+        output, hidden = self.recurrent_layer(embedding)
+        tanh = nn.Tanh()
+        
+        if self.model_type=="RNN":
+            hidden = self.linear0(hidden)
+            hidden = self.activation(hidden)
+            hidden = self.linear1(hidden)
+        
+        hidden = tanh(hidden)
 
         #############################################################################
         #                              END OF YOUR CODE                             #
