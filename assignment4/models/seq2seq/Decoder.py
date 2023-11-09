@@ -101,16 +101,18 @@ class Decoder(nn.Module):
         K = encoder_outputs
 
         q = torch.transpose(q, 0, 1)
-        K = torch.transpose(K, 1, 2)
+        # K = torch.transpose(K, 1, 2)
 
+        product = q @ K.mT
 
-        # attention = torch.bmm(q, K)
-        # norm = torch.linalg.matrix_norm(q, dim=(-2,-1)) * torch.linalg.matrix_norm(K, dim=(-2,-1)) 
-        # attention /= norm
+        q_norm = torch.linalg.norm(q, dim=-1, keepdim=True).squeeze(-1)
+        K_norm = torch.linalg.norm(K, dim=-1, keepdim=True).squeeze()
+        norm = q_norm.multiply(K_norm)
 
-        attention = 
+        cosine_similarity = torch.divide(product.squeeze(), norm).unsqueeze(1)
 
-        print(attention)
+        probabilities = torch.nn.Softmax(dim=-1)
+        attention = probabilities(cosine_similarity)
 
         #############################################################################
         #                              END OF YOUR CODE                             #
