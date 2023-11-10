@@ -46,6 +46,9 @@ class Seq2Seq(nn.Module):
         #    more than 2 lines of code.                                             #
         #############################################################################
 
+        self.encoder = encoder.to(self.device)
+        self.decoder = decoder.to(self.device)
+
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -77,7 +80,33 @@ class Seq2Seq(nn.Module):
         #          input at the next time step.                                     #
         #############################################################################
 
-        outputs = None      #remove this line when you start implementing your code
+        # 1) get the last hidden representation from the encoder
+        encoder_outputs, hidden = self.encoder(source)
+
+        if self.attention:
+
+            outputs = []
+
+            decoder_input = source[0].unsqueeze(0)
+
+            for token in range(out_seq_len):
+
+                decoder_output, hidden = self.decoder(decoder_input, hidden, 
+                                              encoder_outputs, attention=True)
+                outputs.append(decoder_output)
+                decoder_input = decoder_output.topk(1)[1]
+            
+            outputs =  torch.stack(outputs, dim=1)
+        else:
+            decoder_input = source[0].unsqueeze(0)
+
+            outputs, _ = self.decoder(decoder_input, hidden)
+
+            for token in range(out_seq_len - 1):
+
+                decoder_input = outputs.topk(1)[1]
+                decoder_output, hidden = self.decoder(decoder_input, hidden)
+                outputs = torch.cat([outputs, decoder_output], dim=1)
 
         #############################################################################
         #                              END OF YOUR CODE                             #

@@ -55,7 +55,7 @@ class Decoder(nn.Module):
         #############################################################################
 
         # 1) embedding layer 
-        self.embedding = nn.Embedding(self.encoder_hidden_size, self.emb_size)
+        self.embedding = nn.Embedding(self.output_size, self.emb_size)
 
         # 2) recurrent layer 
         if model_type=="RNN":
@@ -65,7 +65,9 @@ class Decoder(nn.Module):
             self.recurrent_layer = nn.LSTM(self.emb_size, self.decoder_hidden_size, batch_first=True)
 
         # 3) single linear layer with (log)softmax layer for output
-        self.linear_layer = nn.LogSoftmax(nn.Linear(self.decoder_hidden_size, self.output_size))
+        self.linear_layer = nn.Linear(self.decoder_hidden_size, self.output_size)
+
+        self.softmax = nn.LogSoftmax(dim=1)
 
         # 4) dropout layer
         self.dropout = nn.Dropout(dropout)
@@ -146,8 +148,27 @@ class Decoder(nn.Module):
         #       before returning it.                                                #
         #############################################################################
 
-        output, hidden = None, None     #remove this line when you start implementing your code
+        
+        if attention:
+            # compute attention probabilities
+            attention_probabilities = self.compute_attention(hidden, encoder_outputs).unsqueeze(1)
 
+            # compute the context 
+            encoder_outputs = encoder_outputs.permute(1, 0, 2)
+            context = torch.bmm(attention_probabilities, encoder_outputs).permute(1, 0, 2)
+
+            # form the recurrent input by joining the embeddings with the context -> recurrent layer
+            recurrent_input = torch.cat((embedding, context), dim=2)
+            output, hidden = self.recurrent_layer(recurrent_input, hidden)
+        else:
+            embedding = self.dropout(self.embedding(input)) 
+            output, hidden = self.recurrent_layer(embedding, hidden)
+            
+        
+        # pass the output -> linear layer -> LogSoftmax
+        output = self.linear_layer(output.squeeze(1))
+        output = self.softmax(output)
+        
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

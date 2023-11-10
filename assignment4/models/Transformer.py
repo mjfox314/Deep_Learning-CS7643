@@ -71,8 +71,12 @@ class TransformerTranslator(nn.Module):
         # You will need to use the max_length parameter above.                       #
         # Don’t worry about sine/cosine encodings- use positional encodings.         #
         ##############################################################################
-        self.embeddingL = None      #initialize word embedding layer
-        self.posembeddingL = None   #initialize positional embedding layer
+
+         #initialize word embedding layer
+        self.embeddingL = nn.Embedding(num_embeddings=self.input_size, embedding_dim=self.word_embedding_dim)  
+
+        #initialize positional embedding layer
+        self.posembeddingL = nn.Embedding(num_embeddings=self.max_length, embedding_dim=self.word_embedding_dim)
 
         ##############################################################################
         #                               END OF YOUR CODE                             #
@@ -105,6 +109,10 @@ class TransformerTranslator(nn.Module):
         # Don't forget the layer normalization.                                      #
         ##############################################################################
         
+        self.linear0 = nn.Linear(self.hidden_dim, self.dim_feedforward)
+        self.relu_activation = nn.ReLU()
+        self.linear1 = nn.Linear(self.dim_feedforward, self.hidden_dim)
+        self.norm = nn.LayerNorm(self.hidden_dim)
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
@@ -115,6 +123,8 @@ class TransformerTranslator(nn.Module):
         # Deliverable 4: Initialize what you need for the final layer (1-2 lines).   #
         ##############################################################################
         
+        self.final_linear = nn.Linear(self.hidden_dim, 1)
+        self.sigmoid_activation = nn.Sigmoid()
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
@@ -136,7 +146,11 @@ class TransformerTranslator(nn.Module):
         # You will need to use all of the methods you have previously defined above.#
         # You should only be calling TransformerTranslator class methods here.      #
         #############################################################################
-        outputs = None      #remove this line when you start implementing your code
+        
+        embeddings = self.embed(inputs)
+        hidden_states = self.multi_head_attention(embeddings)
+        linear_outputs = self.feedforward_layer(hidden_states)
+        outputs = self.final_layer(linear_outputs)
         
         ##############################################################################
         #                               END OF YOUR CODE                             #
@@ -155,8 +169,11 @@ class TransformerTranslator(nn.Module):
         # Note: word_to_ix has keys from 0 to self.vocab_size - 1                   #
         # This will take a few lines.                                               #
         #############################################################################
-      
-        embeddings = None       #remove this line when you start implementing your code
+
+        embedding_input = self.embeddingL(inputs)
+        positional_input = self.posembeddingL(torch.arange(inputs.shape[1]))
+        embeddings = torch.add(embedding_input, positional_input)      
+
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
@@ -177,7 +194,22 @@ class TransformerTranslator(nn.Module):
         # Deliverable 2: Implement multi-head self-attention followed by add + norm.#
         # Use the provided 'Deliverable 2' layers initialized in the constructor.   #
         #############################################################################
-        outputs = None      #remove this line when you start implementing your code
+        
+        Q1 = self.q1(inputs)
+        K1 = self.k1(inputs)
+        V1 = self.v1(inputs)
+
+        attention1 = torch.matmul(self.softmax(torch.matmul(Q1, K1.transpose(-2,-1)) / np.sqrt(self.dim_k)), V1)
+
+        Q2 = self.q1(inputs)
+        K2 = self.k1(inputs)
+        V2 = self.v1(inputs)
+
+        attention2 = torch.matmul(self.softmax(torch.matmul(Q2, K2.transpose(-2,-1)) / np.sqrt(self.dim_k)), V2)
+
+        attention_head = torch.cat((attention1, attention2), dim=2)
+        outputs = self.attention_head_projection(attention_head)
+        outputs = self.norm_mh(torch.add(outputs, inputs))
         
         ##############################################################################
         #                               END OF YOUR CODE                             #
@@ -198,7 +230,11 @@ class TransformerTranslator(nn.Module):
         # initialized them.                                                         #
         # This should not take more than 3-5 lines of code.                         #
         #############################################################################
-        outputs = None      #remove this line when you start implementing your code
+        
+        linear0_output = self.linear0(inputs)
+        relu_output = self.relu_activation(linear0_output)
+        linear1_output = self.linear1(relu_output)
+        outputs = self.norm(linear1_output + inputs)
         
         ##############################################################################
         #                               END OF YOUR CODE                             #
@@ -217,7 +253,9 @@ class TransformerTranslator(nn.Module):
         # Deliverable 4: Implement the final layer for the Transformer Translator.  #
         # This should only take about 1 line of code.                               #
         #############################################################################
-        outputs = None      #remove this line when you start implementing your code
+
+        final_output = self.final_linear(inputs[:,0,:].squeeze(1))
+        outputs = self.sigmoid_activation(final_output) 
                 
         ##############################################################################
         #                               END OF YOUR CODE                             #
@@ -248,6 +286,8 @@ class FullTransformerTranslator(nn.Module):
         # Deliverable 1: Initialize what you need for the Transformer Layer          #
         # You should use nn.Transformer                                              #
         ##############################################################################
+
+        transformer = nn.Transformer(nhead=self.num_heads, dim_feedforward=self.dim_feedforward)
 
         ##############################################################################
         # TODO:

@@ -40,6 +40,7 @@ class Encoder(nn.Module):
         self.encoder_hidden_size = encoder_hidden_size
         self.decoder_hidden_size = decoder_hidden_size
         self.model_type = model_type
+        
         #############################################################################
         # TODO:                                                                     #
         #    Initialize the following layers of the encoder in this order!:         #
