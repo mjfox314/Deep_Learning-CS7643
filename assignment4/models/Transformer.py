@@ -123,7 +123,7 @@ class TransformerTranslator(nn.Module):
         # Deliverable 4: Initialize what you need for the final layer (1-2 lines).   #
         ##############################################################################
         
-        self.final_linear = nn.Linear(self.hidden_dim, 1)
+        self.final_linear = nn.Linear(1, self.input_size)
         self.sigmoid_activation = nn.Sigmoid()
         ##############################################################################
         #                               END OF YOUR CODE                             #
@@ -201,9 +201,9 @@ class TransformerTranslator(nn.Module):
 
         attention1 = torch.matmul(self.softmax(torch.matmul(Q1, K1.transpose(-2,-1)) / np.sqrt(self.dim_k)), V1)
 
-        Q2 = self.q1(inputs)
-        K2 = self.k1(inputs)
-        V2 = self.v1(inputs)
+        Q2 = self.q2(inputs)
+        K2 = self.k2(inputs)
+        V2 = self.v2(inputs)
 
         attention2 = torch.matmul(self.softmax(torch.matmul(Q2, K2.transpose(-2,-1)) / np.sqrt(self.dim_k)), V2)
 
@@ -253,9 +253,12 @@ class TransformerTranslator(nn.Module):
         # Deliverable 4: Implement the final layer for the Transformer Translator.  #
         # This should only take about 1 line of code.                               #
         #############################################################################
-
-        final_output = self.final_linear(inputs[:,0,:].squeeze(1))
+        print(inputs.shape)
+        print(inputs[:,:,0].unsqueeze(-1).shape)
+        final_output = self.final_linear(inputs[:,:,0].unsqueeze(-1))
         outputs = self.sigmoid_activation(final_output) 
+        print(outputs.shape)
+        
                 
         ##############################################################################
         #                               END OF YOUR CODE                             #

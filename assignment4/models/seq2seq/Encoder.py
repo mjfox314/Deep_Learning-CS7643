@@ -58,7 +58,7 @@ class Encoder(nn.Module):
         #                                                                           #
         # NOTE: Use nn.RNN and nn.LSTM instead of the naive implementation          #
         #############################################################################
-        
+
         # 1) embedding layer
         self.embedding = nn.Embedding(self.input_size, self.emb_size)
 
@@ -71,14 +71,16 @@ class Encoder(nn.Module):
         
         # 3) linear layers with ReLU activation in between 
         self.linear0 = nn.Linear(self.encoder_hidden_size, self.encoder_hidden_size)
-        self.activation = nn.ReLU()
+        self.relu_activation = nn.ReLU()
         self.linear1 = nn.Linear(self.encoder_hidden_size, self.decoder_hidden_size)
+        self.tanh_activation = nn.Tanh()
 
         # 4) dropout layer
         self.dropout_layer = nn.Dropout(dropout)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
+    
 
     def forward(self, input):
         """ The forward pass of the encoder
@@ -98,20 +100,24 @@ class Encoder(nn.Module):
         #############################################################################
 
         embedding = self.dropout_layer(self.embedding(input))
-        output, hidden = self.recurrent_layer(embedding)
-        tanh = nn.Tanh()
+
+        if self.model_type == "RNN":
+            output, hidden = self.recurrent_layer(embedding)
+        elif self.model_type == "LSTM":
+            output, (hidden, cell_state) = self.recurrent_layer(embedding)
         
-        if self.model_type=="RNN":
-            hidden = self.linear0(hidden)
-            hidden = self.activation(hidden)
-            hidden = self.linear1(hidden)
-        
-        hidden = tanh(hidden)
+        hidden = self.linear0(hidden)
+        hidden = self.relu_activation(hidden)
+        hidden = self.linear1(hidden)
+        hidden = self.tanh_activation(hidden)
+
+        if self.model_type == "LSTM":
+            hidden = (hidden, cell_state)
 
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
         # Do not apply any linear layers/Relu for the cell state when model_type is #
         # LSTM before returning it.                                                 #
-
+        
         return output, hidden

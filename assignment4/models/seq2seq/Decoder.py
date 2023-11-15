@@ -55,7 +55,7 @@ class Decoder(nn.Module):
         #############################################################################
 
         # 1) embedding layer 
-        self.embedding = nn.Embedding(self.output_size, self.emb_size)
+        self.embedding_layer = nn.Embedding(self.output_size, self.emb_size)
 
         # 2) recurrent layer 
         if model_type=="RNN":
@@ -67,7 +67,7 @@ class Decoder(nn.Module):
         # 3) single linear layer with (log)softmax layer for output
         self.linear_layer = nn.Linear(self.decoder_hidden_size, self.output_size)
 
-        self.softmax = nn.LogSoftmax(dim=1)
+        self.softmax = nn.LogSoftmax(dim=-1)
 
         # 4) dropout layer
         self.dropout = nn.Dropout(dropout)
@@ -148,26 +148,29 @@ class Decoder(nn.Module):
         #       before returning it.                                                #
         #############################################################################
 
+        embedding = self.dropout(self.embedding_layer(input))
         
-        if attention:
-            # compute attention probabilities
-            attention_probabilities = self.compute_attention(hidden, encoder_outputs).unsqueeze(1)
-
-            # compute the context 
-            encoder_outputs = encoder_outputs.permute(1, 0, 2)
-            context = torch.bmm(attention_probabilities, encoder_outputs).permute(1, 0, 2)
-
-            # form the recurrent input by joining the embeddings with the context -> recurrent layer
-            recurrent_input = torch.cat((embedding, context), dim=2)
-            output, hidden = self.recurrent_layer(recurrent_input, hidden)
-        else:
-            embedding = self.dropout(self.embedding(input)) 
-            output, hidden = self.recurrent_layer(embedding, hidden)
+        if self.model_type == 'LSTM':
+            (hidden, cell_state) = hidden
             
+        if attention:
+            hidden_attention = self.compute_attention(hidden, encoder_outputs)
+            hidden = hidden_attention @ encoder_outputs
+            hidden = hidden.transpose(0, 1)
+
+            if self.model_type=="LSTM":
+                cell_attention = self.compute_attention(cell_state, encoder_outputs)
+                cell_state = cell_attention @ encoder_outputs
+                cell_state = cell_state.transpose(0, 1)
+
+        if self.model_type == "RNN":
+            output, hidden = self.recurrent_layer(embedding, hidden)
+        elif self.model_type=="LSTM":
+            output, hidden = self.recurrent_layer(embedding, (hidden, cell_state))
         
         # pass the output -> linear layer -> LogSoftmax
-        output = self.linear_layer(output.squeeze(1))
-        output = self.softmax(output)
+        output = self.linear_layer(output.squeeze())
+        output = torch.nn.functional.log_softmax(output, dim=-1)  
         
         #############################################################################
         #                              END OF YOUR CODE                             #

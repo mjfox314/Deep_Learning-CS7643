@@ -60,9 +60,6 @@ class Seq2Seq(nn.Module):
                 out_seq_len (int): the maximum length of the output sequence. If None, the length is determined by the input sequences.
         """
 
-        batch_size = source.shape[0]
-        if out_seq_len is None:
-            seq_len = source.shape[1]
         #############################################################################
         # TODO:                                                                     #
         #   Implement the forward pass of the Seq2Seq model. Please refer to the    #
@@ -79,35 +76,28 @@ class Seq2Seq(nn.Module):
         #          will have to be manipulated before being fed in as the decoder   #
         #          input at the next time step.                                     #
         #############################################################################
+        
+        batch_size = source.shape[0]
+        seq_len = source.shape[1]
 
-        # 1) get the last hidden representation from the encoder
+        if out_seq_len is None:
+            out_seq_len = seq_len
+        
+        outputs = []
+
+        # # 1) get the last hidden representation from the encoder
         encoder_outputs, hidden = self.encoder(source)
 
-        if self.attention:
+        decoder_input = source[:,0].unsqueeze(1)
 
-            outputs = []
-
-            decoder_input = source[0].unsqueeze(0)
-
-            for token in range(out_seq_len):
-
-                decoder_output, hidden = self.decoder(decoder_input, hidden, 
-                                              encoder_outputs, attention=True)
-                outputs.append(decoder_output)
-                decoder_input = decoder_output.topk(1)[1]
+        for t in range(0, out_seq_len):
+            decoder_output, hidden = self.decoder(decoder_input, hidden, encoder_outputs, self.attention)
+            # outputs[t] = decoder_output
+            outputs.append(decoder_output)
+            decoder_input = decoder_output.argmax(1).unsqueeze(1)
             
-            outputs =  torch.stack(outputs, dim=1)
-        else:
-            decoder_input = source[0].unsqueeze(0)
-
-            outputs, _ = self.decoder(decoder_input, hidden)
-
-            for token in range(out_seq_len - 1):
-
-                decoder_input = outputs.topk(1)[1]
-                decoder_output, hidden = self.decoder(decoder_input, hidden)
-                outputs = torch.cat([outputs, decoder_output], dim=1)
-
+        outputs = torch.stack(outputs,1)
+        
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
