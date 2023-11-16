@@ -123,8 +123,10 @@ class TransformerTranslator(nn.Module):
         # Deliverable 4: Initialize what you need for the final layer (1-2 lines).   #
         ##############################################################################
         
-        self.final_linear = nn.Linear(1, self.input_size)
-        self.sigmoid_activation = nn.Sigmoid()
+        
+        # self.final_linear = nn.Linear(self.word_embedding_dim, self.output_size)
+        self.final_linear = nn.Linear(self.hidden_dim, self.output_size)
+        self.decoder_softmax = nn.Softmax(dim=-1)
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
@@ -253,13 +255,9 @@ class TransformerTranslator(nn.Module):
         # Deliverable 4: Implement the final layer for the Transformer Translator.  #
         # This should only take about 1 line of code.                               #
         #############################################################################
-        print(inputs.shape)
-        print(inputs[:,:,0].unsqueeze(-1).shape)
-        final_output = self.final_linear(inputs[:,:,0].unsqueeze(-1))
-        outputs = self.sigmoid_activation(final_output) 
-        print(outputs.shape)
         
-                
+        outputs = self.final_linear(inputs)
+
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
@@ -282,6 +280,11 @@ class FullTransformerTranslator(nn.Module):
         self.device = device
         self.pad_idx=ignore_index
 
+        self.num_layers_enc = num_layers_enc
+        self.num_layers_dec = num_layers_dec
+        self.dropout = dropout
+        self.device = device
+
         seed_torch(0)
 
         ##############################################################################
@@ -290,7 +293,15 @@ class FullTransformerTranslator(nn.Module):
         # You should use nn.Transformer                                              #
         ##############################################################################
 
-        transformer = nn.Transformer(nhead=self.num_heads, dim_feedforward=self.dim_feedforward)
+        self.transformer = nn.Transformer(
+            d_model=self.word_embedding_dim,
+            nhead=self.num_heads,
+            num_encoder_layers=self.num_layers_enc,
+            num_decoder_layers=self.num_layers_dec,
+            dim_feedforward=self.dim_feedforward,
+            dropout=self.dropout,
+            batch_first=True
+        )
 
         ##############################################################################
         # TODO:
@@ -299,19 +310,28 @@ class FullTransformerTranslator(nn.Module):
         # Initialize embeddings in order shown below.                                #
         # Don’t worry about sine/cosine encodings- use positional encodings.         #
         ##############################################################################
-        self.srcembeddingL = None       #embedding for src
-        self.tgtembeddingL = None       #embedding for target
-        self.srcposembeddingL = None    #embedding for src positional encoding
-        self.tgtposembeddingL = None    #embedding for target positional encoding
+        self.srcembeddingL = nn.Embedding(num_embeddings=self.input_size, embedding_dim=self.word_embedding_dim)      
+        self.tgtembeddingL = nn.Embedding(num_embeddings=self.input_size, embedding_dim=self.word_embedding_dim)
+        self.srcposembeddingL = nn.Embedding(num_embeddings=self.max_length, embedding_dim=self.word_embedding_dim)
+        self.tgtposembeddingL = nn.Embedding(num_embeddings=self.max_length, embedding_dim=self.word_embedding_dim)
         ##############################################################################
         # TODO:
         # Deliverable 3: Initialize what you need for the final layer.               #
         ##############################################################################
 
+        self.final_linear = nn.Linear(self.word_embedding_dim, self.output_size)
+        self.dropout = nn.Dropout(self.dropout)
+
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
 
+    
+    def make_source_mask(self, src):
+        source_mask = src.transpose(0,1) == self.pad_idx
+        return source_mask
+    
+    
     def forward(self, src, tgt):
         """
          This function computes the full Transformer forward pass used during training.
@@ -325,18 +345,47 @@ class FullTransformerTranslator(nn.Module):
         # TODO:
         # Deliverable 4: Implement the full Transformer stack for the forward pass. #
         #############################################################################
-        outputs=None
+
+        N, source_sequence_length = src.shape
+        N, target_sequence_length = tgt.shape
+
+        source_positions = (
+            torch.arange(0, source_sequence_length).unsqueeze(1).expand(source_sequence_length, N)
+            .to(self.device)
+        )
+
+        target_positions = (
+            torch.arange(0, target_sequence_length).unsqueeze(1).expand(target_sequence_length, N)
+            .to(self.device)
+        )
+        
         # shift tgt to right, add one <sos> to the beginning and shift the other tokens to right
         tgt = self.add_start_token(tgt)
 
 
         # embed src and tgt for processing by transformer
 
+        embed_source = self.dropout((self.srcembeddingL(src) + self.srcposembeddingL(src)))
+        embed_target = self.dropout((self.tgtembeddingL(tgt) + self.tgtposembeddingL(tgt)))
+
         # create target mask and target key padding mask for decoder
+
+        source_padding_mask = self.make_source_mask(src)
+        target_mask = self.transformer.generate_square_subsequent_mask(target_sequence_length).to(self.device)
 
         # invoke transformer to generate output
 
+        outputs = self.transformer(
+            embed_source,
+            embed_target,
+            src_key_padding_mask = source_padding_mask,
+            tgt_mask = target_mask
+
+        )
+
         # pass through final layer to generate outputs
+
+        outputs = self.final_linear(outputs)
 
         ##############################################################################
         #                               END OF YOUR CODE                             #
