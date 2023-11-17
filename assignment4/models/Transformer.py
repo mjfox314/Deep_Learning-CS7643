@@ -365,8 +365,8 @@ class FullTransformerTranslator(nn.Module):
 
         # embed src and tgt for processing by transformer
 
-        embed_source = self.dropout((self.srcembeddingL(src) + self.srcposembeddingL(src)))
-        embed_target = self.dropout((self.tgtembeddingL(tgt) + self.tgtposembeddingL(tgt)))
+        embed_source = self.dropout((self.srcembeddingL(src) + self.srcposembeddingL(source_positions)))
+        embed_target = self.dropout((self.tgtembeddingL(tgt) + self.tgtposembeddingL(target_positions)))
 
         # create target mask and target key padding mask for decoder
 
@@ -380,7 +380,6 @@ class FullTransformerTranslator(nn.Module):
             embed_target,
             src_key_padding_mask = source_padding_mask,
             tgt_mask = target_mask
-
         )
 
         # pass through final layer to generate outputs
@@ -407,6 +406,16 @@ class FullTransformerTranslator(nn.Module):
         # Deliverable 5: You will be calling the transformer forward function to    #
         # generate the translation for the input.                                   #
         #############################################################################
+        N, source_sequence_length = src.shape
+
+        src = self.add_start_token(batch_sequences=src)
+
+        tgt = torch.zeros(N, self.max_length)
+
+        outputs = torch.ones(N, self.max_length, self.output_size)
+
+        tgt[:,0] = src[:,0]
+
         outputs = None
         ##############################################################################
         #                               END OF YOUR CODE                             #
